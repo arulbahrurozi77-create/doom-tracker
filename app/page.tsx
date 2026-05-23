@@ -60,10 +60,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex flex-col md:flex-row min-h-screen ...">
 
       {/* SIDEBAR */}
-      <aside className="w-72 bg-gradient-to-b from-slate-950 to-slate-900 text-white p-8 shadow-2xl">
+      <aside className="w-full md:w-72 bg-gradient-to-b from-slate-950 to-slate-900 text-white p-8 shadow-2xl">
 
         <h1 className="text-5xl font-black text-indigo-400">
           DoomTracker
