@@ -1,126 +1,304 @@
 "use client"
 
-import SpendingChart from "@/components/ui/charts/spending-chart"
+import { useEffect, useState } from "react"
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts"
+
+const COLORS = [
+  "#6366f1",
+  "#ec4899",
+  "#10b981",
+  "#f59e0b",
+  "#06b6d4",
+  "#8b5cf6",
+]
 
 export default function AnalyticsPage() {
 
+  const [transactions, setTransactions] = useState<any[]>([])
+
+  // FETCH TRANSACTIONS
+  const fetchTransactions = async () => {
+
+    try {
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/transactions"
+      )
+
+      const data = await response.json()
+
+      setTransactions(data)
+
+    } catch (error) {
+
+      console.log(error)
+
+    }
+
+  }
+
+  // LOAD DATA
+  useEffect(() => {
+
+    fetchTransactions()
+
+  }, [])
+
+  // CATEGORY DATA
+  const categoryMap: any = {}
+
+  transactions.forEach((transaction) => {
+
+    if (!categoryMap[transaction.category]) {
+      categoryMap[transaction.category] = 0
+    }
+
+    categoryMap[transaction.category] += transaction.amount
+
+  })
+
+  const spendingData = Object.keys(categoryMap).map((key) => ({
+    name: key,
+    value: categoryMap[key],
+  }))
+
+  // MONTHLY DATA
+  const monthlyMap: any = {}
+
+  transactions.forEach((transaction) => {
+
+  if (!transaction.created_at) return
+
+  const month = new Date(
+    transaction.created_at.replace(" ", "T")
+  ).toLocaleString("default", {
+    month: "short",
+  })
+
+  if (!monthlyMap[month]) {
+    monthlyMap[month] = 0
+  }
+
+  monthlyMap[month] += transaction.amount
+
+})
+
+  const monthlyData = Object.keys(monthlyMap).map((key) => ({
+    month: key,
+    amount: monthlyMap[key],
+  }))
+
+  // TOTAL EXPENSE
+  const totalExpense = transactions.reduce(
+    (acc, item) => acc + item.amount,
+    0
+  )
+
+  // TOP CATEGORY
+  const topCategory =
+    spendingData.length > 0
+      ? spendingData.reduce((prev, current) =>
+          prev.value > current.value ? prev : current
+        )
+      : { name: "No Data" }
+
+  // AI RECOMMENDATION
+  let recommendation = "Your spending looks healthy 🎉"
+
+  if (topCategory.name === "Entertainment") {
+    recommendation = "Reduce entertainment spending 💀"
+  }
+
+  else if (topCategory.name === "Gaming") {
+    recommendation = "Gaming expense too high 🎮"
+  }
+
+  else if (topCategory.name === "Food") {
+    recommendation = "Try reducing food delivery 🍔"
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100 p-10">
+
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-black to-slate-900 text-white p-6 md:p-10 overflow-hidden">
+
+      {/* BACKGROUND GLOW */}
+      <div className="absolute top-[-200px] left-[-100px] w-[500px] h-[500px] bg-indigo-500 opacity-20 blur-[120px] rounded-full" />
+
+      <div className="absolute bottom-[-200px] right-[-100px] w-[500px] h-[500px] bg-pink-500 opacity-20 blur-[120px] rounded-full" />
 
       {/* HEADER */}
-      <div>
+      <div className="relative z-10">
 
-        <h1 className="text-6xl font-black text-slate-900">
-          Analytics 📈
+        <h1 className="text-4xl md:text-6xl font-black text-white">
+          Analytics Dashboard 📊
         </h1>
 
-        <p className="text-slate-500 mt-4 text-xl">
-          AI spending behavior analysis
+        <p className="text-slate-400 mt-4 text-lg md:text-xl">
+          AI financial insights & spending analysis
         </p>
 
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
 
-        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-8 rounded-3xl shadow-2xl text-white">
+        {/* TOTAL */}
+        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-8 rounded-3xl shadow-2xl text-white hover:scale-105 transition-all">
 
           <p className="text-white/80 text-lg">
-            Highest Expense
+            Total Expense
           </p>
 
-          <h2 className="text-5xl font-black mt-5">
-            Rp 900K
+          <h2 className="text-4xl md:text-5xl font-black mt-4">
+            Rp {totalExpense.toLocaleString()}
           </h2>
 
         </div>
 
-        <div className="bg-gradient-to-r from-pink-500 to-red-500 p-8 rounded-3xl shadow-2xl text-white">
+        {/* TOP CATEGORY */}
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-8 rounded-3xl shadow-2xl text-white hover:scale-105 transition-all">
 
           <p className="text-white/80 text-lg">
-            AI Risk Level
+            Top Category
           </p>
 
-          <h2 className="text-5xl font-black mt-5">
-            Medium
+          <h2 className="text-3xl md:text-4xl font-black mt-4">
+            {topCategory.name}
           </h2>
 
         </div>
 
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 rounded-3xl shadow-2xl text-white">
+        {/* AI RECOMMENDATION */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 rounded-3xl shadow-2xl text-white hover:scale-105 transition-all">
 
           <p className="text-white/80 text-lg">
-            Monthly Saving
+            AI Recommendation
           </p>
 
-          <h2 className="text-5xl font-black mt-5">
-            Rp 1.5M
+          <h2 className="text-2xl md:text-3xl font-black mt-4">
+            {recommendation}
           </h2>
 
         </div>
 
       </div>
 
-      {/* CHART */}
-      <div className="mt-12 bg-white p-8 rounded-3xl shadow-2xl">
+      {/* CHARTS */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
 
-        <h2 className="text-4xl font-black text-slate-900 mb-8">
-          Spending Trend Analysis
-        </h2>
+        {/* PIE CHART */}
+        <div className="bg-black/40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-800">
 
-        <SpendingChart />
+          <h2 className="text-3xl font-black mb-8 text-white">
+            Spending Categories
+          </h2>
 
-      </div>
+          {spendingData.length === 0 ? (
 
-      {/* AI ANALYSIS */}
-      <div className="mt-12 bg-white p-8 rounded-3xl shadow-2xl">
-
-        <h2 className="text-4xl font-black text-slate-900 mb-8">
-          🤖 AI Recommendation
-        </h2>
-
-        <div className="space-y-6">
-
-          <div className="p-6 rounded-2xl bg-red-100 border border-red-200">
-
-            <h3 className="text-2xl font-bold text-red-600">
-              Entertainment Spending High
-            </h3>
-
-            <p className="text-slate-600 mt-2">
-              Your entertainment spending increased by 35% this month.
+            <p className="text-slate-400">
+              No transaction data yet.
             </p>
 
-          </div>
+          ) : (
 
-          <div className="p-6 rounded-2xl bg-yellow-100 border border-yellow-200">
+            <ResponsiveContainer width="100%" height={350}>
 
-            <h3 className="text-2xl font-bold text-yellow-600">
-              Saving Opportunity
-            </h3>
+              <PieChart>
 
-            <p className="text-slate-600 mt-2">
-              You can save around Rp 500K by reducing gaming purchases.
+                <Pie
+                  data={spendingData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={120}
+                  label
+                >
+
+                  {spendingData.map((entry, index) => (
+
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+
+                  ))}
+
+                </Pie>
+
+                <Tooltip />
+
+              </PieChart>
+
+            </ResponsiveContainer>
+
+          )}
+
+        </div>
+
+        {/* BAR CHART */}
+        <div className="bg-black/40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-slate-800">
+
+          <h2 className="text-3xl font-black mb-8 text-white">
+            Monthly Spending
+          </h2>
+
+          {monthlyData.length === 0 ? (
+
+            <p className="text-slate-400">
+              No monthly data yet.
             </p>
 
-          </div>
+          ) : (
 
-          <div className="p-6 rounded-2xl bg-green-100 border border-green-200">
+            <ResponsiveContainer width="100%" height={350}>
 
-            <h3 className="text-2xl font-bold text-green-600">
-              Financial Status Stable
-            </h3>
+              <BarChart data={monthlyData}>
 
-            <p className="text-slate-600 mt-2">
-              Your monthly income is still higher than your expenses.
-            </p>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#334155"
+                />
 
-          </div>
+                <XAxis
+                  dataKey="month"
+                  stroke="#94a3b8"
+                />
+
+                <YAxis
+                  stroke="#94a3b8"
+                />
+
+                <Tooltip />
+
+                <Bar
+                  dataKey="amount"
+                  fill="#818cf8"
+                  radius={[12, 12, 0, 0]}
+                />
+
+              </BarChart>
+
+            </ResponsiveContainer>
+
+          )}
 
         </div>
 
       </div>
 
     </div>
+
   )
+
 }

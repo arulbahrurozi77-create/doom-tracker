@@ -7,21 +7,24 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts"
 
 const data = [
-  { month: "Jan", amount: 400 },
-  { month: "Feb", amount: 800 },
-  { month: "Mar", amount: 300 },
-  { month: "Apr", amount: 1000 },
-  { month: "May", amount: 700 },
+  { month: "Jan", amount: 400000 },
+  { month: "Feb", amount: 800000 },
+  { month: "Mar", amount: 300000 },
+  { month: "Apr", amount: 1000000 },
+  { month: "May", amount: 700000 },
 ]
 
 export default function SpendingChart() {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm mt-8">
 
-      <h2 className="text-xl font-bold mb-6">
+  return (
+
+    <div className="bg-slate-900 p-6 rounded-3xl shadow-2xl border border-slate-800">
+
+      <h2 className="text-2xl font-black mb-6 text-white">
         Spending Trend
       </h2>
 
@@ -29,15 +32,24 @@ export default function SpendingChart() {
 
         <LineChart data={data}>
 
-          <XAxis dataKey="month" />
-          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+
+          <XAxis
+            dataKey="month"
+            stroke="#94a3b8"
+          />
+
+          <YAxis
+            stroke="#94a3b8"
+          />
+
           <Tooltip />
 
           <Line
             type="monotone"
             dataKey="amount"
-            stroke="#000"
-            strokeWidth={3}
+            stroke="#818cf8"
+            strokeWidth={4}
           />
 
         </LineChart>
@@ -45,5 +57,7 @@ export default function SpendingChart() {
       </ResponsiveContainer>
 
     </div>
+
   )
+
 }

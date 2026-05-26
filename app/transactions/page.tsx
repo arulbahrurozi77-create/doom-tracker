@@ -1,146 +1,167 @@
+"use client"
+
+import { useEffect, useState } from "react"
+
 export default function TransactionsPage() {
+
+  const [title, setTitle] = useState("")
+  const [category, setCategory] = useState("")
+  const [amount, setAmount] = useState("")
+
+  const [transactions, setTransactions] = useState<any[]>([])
+
+  // GET TRANSACTIONS
+  const fetchTransactions = async () => {
+
+    try {
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/transactions"
+      )
+
+      const data = await response.json()
+
+      console.log("FETCH:", data)
+
+      setTransactions(data)
+
+    } catch (error) {
+
+      console.log("FETCH ERROR:", error)
+
+    }
+
+  }
+
+  // LOAD
+  useEffect(() => {
+
+    fetchTransactions()
+
+  }, [])
+
+  // ADD
+  const addTransaction = async () => {
+
+    if (!title || !category || !amount) {
+      alert("Isi semua field")
+      return
+    }
+
+    try {
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/transactions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            title,
+            category,
+            amount: Number(amount),
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      console.log("POST:", data)
+
+      // RELOAD DATA
+      await fetchTransactions()
+
+      // RESET
+      setTitle("")
+      setCategory("")
+      setAmount("")
+
+      alert("Transaction added 🚀")
+
+    } catch (error) {
+
+      console.log("POST ERROR:", error)
+
+    }
+
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-10">
 
-      {/* HEADER */}
-      <div>
+    <div className="min-h-screen bg-black text-white p-10">
 
-        <h1 className="text-6xl font-black text-slate-900">
-          Transactions 💳
-        </h1>
+      <h1 className="text-5xl font-black mb-10">
+        Transactions
+      </h1>
 
-        <p className="text-slate-500 mt-4 text-xl">
-          Monitor all your spending activity
-        </p>
+      {/* FORM */}
+      <div className="space-y-5 max-w-xl">
 
-      </div>
+        <input
+          type="text"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-4 rounded-xl bg-slate-800"
+        />
 
-      {/* CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+        <input
+          type="text"
+          placeholder="Category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full p-4 rounded-xl bg-slate-800"
+        />
 
-        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-8 rounded-3xl shadow-2xl text-white">
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-full p-4 rounded-xl bg-slate-800"
+        />
 
-          <p className="text-white/80 text-lg">
-            Monthly Expense
-          </p>
-
-          <h2 className="text-5xl font-black mt-4">
-            Rp 3.200.000
-          </h2>
-
-        </div>
-
-        <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-8 rounded-3xl shadow-2xl text-white">
-
-          <p className="text-white/80 text-lg">
-            Entertainment
-          </p>
-
-          <h2 className="text-5xl font-black mt-4">
-            Rp 900.000
-          </h2>
-
-        </div>
-
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 rounded-3xl shadow-2xl text-white">
-
-          <p className="text-white/80 text-lg">
-            Savings
-          </p>
-
-          <h2 className="text-5xl font-black mt-4">
-            Rp 1.500.000
-          </h2>
-
-        </div>
+        <button
+          onClick={addTransaction}
+          className="bg-indigo-500 px-8 py-4 rounded-xl"
+        >
+          Add Transaction
+        </button>
 
       </div>
 
-      {/* TABLE */}
-      <div className="mt-12 bg-white rounded-3xl shadow-2xl p-8">
+      {/* LIST */}
+      <div className="mt-10 space-y-5">
 
-        <h2 className="text-4xl font-black text-slate-900 mb-8">
-          Transaction History
-        </h2>
+        {transactions.map((transaction) => (
 
-        <div className="space-y-5">
+          <div
+            key={transaction.id}
+            className="bg-slate-900 p-5 rounded-xl"
+          >
 
-          <div className="flex justify-between items-center p-5 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all">
+            <h2 className="text-2xl font-bold">
+              {transaction.title}
+            </h2>
 
-            <div>
-              <h3 className="font-bold text-xl">
-                Netflix Subscription
-              </h3>
+            <p>
+              {transaction.category}
+            </p>
 
-              <p className="text-slate-500">
-                Entertainment
-              </p>
-            </div>
-
-            <p className="text-red-500 font-black text-2xl">
-              - Rp 150.000
+            <p className="text-red-400">
+              Rp {transaction.amount}
             </p>
 
           </div>
 
-          <div className="flex justify-between items-center p-5 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all">
-
-            <div>
-              <h3 className="font-bold text-xl">
-                Spotify Premium
-              </h3>
-
-              <p className="text-slate-500">
-                Music
-              </p>
-            </div>
-
-            <p className="text-red-500 font-black text-2xl">
-              - Rp 59.000
-            </p>
-
-          </div>
-
-          <div className="flex justify-between items-center p-5 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all">
-
-            <div>
-              <h3 className="font-bold text-xl">
-                Monthly Salary
-              </h3>
-
-              <p className="text-slate-500">
-                Income
-              </p>
-            </div>
-
-            <p className="text-green-500 font-black text-2xl">
-              + Rp 5.000.000
-            </p>
-
-          </div>
-
-          <div className="flex justify-between items-center p-5 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all">
-
-            <div>
-              <h3 className="font-bold text-xl">
-                Steam Games
-              </h3>
-
-              <p className="text-slate-500">
-                Gaming
-              </p>
-            </div>
-
-            <p className="text-red-500 font-black text-2xl">
-              - Rp 450.000
-            </p>
-
-          </div>
-
-        </div>
+        ))}
 
       </div>
 
     </div>
+
   )
+
 }
