@@ -11,29 +11,53 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
 
-    if (!name || !email || !password) {
-      alert("Please fill all fields")
-      return
-    }
+  if (!name || !email || !password) {
+    alert("Please fill all fields")
+    return
+  }
 
-    const userData = {
-      name,
-      email,
-      password,
-    }
+  try {
 
-    localStorage.setItem(
-      "doomtracker-user",
-      JSON.stringify(userData)
+    const response = await fetch(
+      "https://doomtracker-backend-production.up.railway.app/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      }
     )
 
-    alert("Register Success 🚀")
+    const data = await response.json()
 
-    router.push("/login")
+    alert(data.message)
+
+    if (data.message === "Register success 🚀") {
+
+      setName("")
+      setEmail("")
+      setPassword("")
+
+      router.push("/login")
+
+    }
+
+  } catch (error) {
+
+    console.log(error)
+
+    alert("Register failed")
 
   }
+
+}
 
   return (
 
