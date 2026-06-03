@@ -132,16 +132,27 @@ export default function AnalyticsPage() {
             <p className="text-slate-400">Belum ada data transaksi.</p>
           ) : (
             <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie data={spendingData} dataKey="value" nameKey="name" outerRadius={120}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {spendingData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={tooltipFormatter} />
-              </PieChart>
-            </ResponsiveContainer>
+  <PieChart>
+    <Pie
+      data={spendingData}
+      dataKey="value"
+      nameKey="name"
+      outerRadius={120}
+      label={({ name, percent = 0 }) =>
+        `${name} ${(percent * 100).toFixed(0)}%`
+      }
+    >
+      {spendingData.map((_, index) => (
+        <Cell
+          key={`cell-${index}`}
+          fill={COLORS[index % COLORS.length]}
+        />
+      ))}
+    </Pie>
+
+    <Tooltip formatter={tooltipFormatter as any} />
+  </PieChart>
+</ResponsiveContainer>
           )}
         </div>
 
@@ -151,14 +162,21 @@ export default function AnalyticsPage() {
             <p className="text-slate-400">Belum ada data bulanan.</p>
           ) : (
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={tooltipFormatter} />
-                <Bar dataKey="amount" fill="#818cf8" radius={[12, 12, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+  <BarChart data={monthlyData}>
+    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+    <XAxis dataKey="month" stroke="#94a3b8" />
+    <YAxis
+  stroke="#94a3b8"
+  tickFormatter={(v: any) => `${(Number(v) / 1000).toFixed(0)}k`}
+/>
+    <Tooltip formatter={tooltipFormatter as any} />
+    <Bar
+      dataKey="amount"
+      fill="#818cf8"
+      radius={[12, 12, 0, 0]}
+    />
+  </BarChart>
+</ResponsiveContainer>
           )}
         </div>
       </div>
