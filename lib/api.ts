@@ -1,5 +1,4 @@
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://doomtracker-backend.vercel.app"
+const BASE_URL = "https://doomtracker-backend.vercel.app"
 
 export const apiFetch = async (
   endpoint: string,
