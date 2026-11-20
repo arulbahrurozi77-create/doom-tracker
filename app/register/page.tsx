@@ -21,7 +21,7 @@ export default function RegisterPage() {
   try {
 
     const response = await fetch(
-      "https://doomtracker-backend-production.up.railway.app/register",
+      "https://doomtracker-backend.vercel.app/register",
       {
         method: "POST",
         headers: {
