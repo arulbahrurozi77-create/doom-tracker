@@ -1,10 +1,12 @@
-const BASE_URL = "https://doomtracker-backend-production.up.railway.app"
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://doomtracker-backend.vercel.app"
 
 export const apiFetch = async (
   endpoint: string,
   options: RequestInit = {}
 ) => {
-  const token = localStorage.getItem("token")
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
@@ -16,8 +18,10 @@ export const apiFetch = async (
   })
 
   if (response.status === 401) {
-    localStorage.clear()
-    window.location.href = "/login"
+    if (typeof window !== "undefined") {
+      localStorage.clear()
+      window.location.href = "/login"
+    }
     throw new Error("Unauthorized")
   }
 
