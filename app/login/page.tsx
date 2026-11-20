@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       setLoading(true)
 
-      const response = await fetch("https://doomtracker-backend-production.up.railway.app/login", {
+      const response = await fetch("https://doomtracker-backend.vercel.app", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
