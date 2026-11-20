@@ -1,9 +1,6 @@
 const BASE_URL = "https://doomtracker-backend.vercel.app"
 
-export const apiFetch = async (
-  endpoint: string,
-  options: RequestInit = {}
-) => {
+export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null
 
@@ -16,12 +13,9 @@ export const apiFetch = async (
     },
   })
 
-  if (response.status === 401) {
-    if (typeof window !== "undefined") {
-      localStorage.clear()
-      window.location.href = "/login"
-    }
-    throw new Error("Unauthorized")
+  if (response.status === 401 && typeof window !== "undefined") {
+    localStorage.removeItem("token")
+    window.location.href = "/login"
   }
 
   return response
