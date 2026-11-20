@@ -5,13 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api"
 import DonutChart from "@/components/DonutChart"
-
-interface Transaction {
-  id: number
-  title: string
-  category: string
-  amount: number
-}
+import { filterByPeriod, PeriodType, TransactionItem } from "@/lib/dateFilter"
 
 const NAV = [
   { href: "/", label: "Dashboard" },
@@ -19,9 +13,17 @@ const NAV = [
   { href: "/analytics", label: "Analisis AI" },
 ]
 
+const PERIODS: { key: PeriodType; label: string }[] = [
+  { key: "today", label: "Hari Ini" },
+  { key: "week", label: "7 Hari Terakhir" },
+  { key: "month", label: "30 Hari Terakhir" },
+  { key: "all", label: "Semua" },
+]
+
 export default function AnalyticsPage() {
   const router = useRouter()
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [transactions, setTransactions] = useState<TransactionItem[]>([])
+  const [period, setPeriod] = useState<PeriodType>("month")
   const [income, setIncome] = useState("5000000")
   const [expense, setExpense] = useState("")
   const [savings, setSavings] = useState("1500000")
@@ -36,7 +38,7 @@ export default function AnalyticsPage() {
     }
     apiFetch("/transactions").then(async (res) => {
       if (!res.ok) return
-      const data: Transaction[] = await res.json()
+      const data: TransactionItem[] = await res.json()
       setTransactions(data)
       const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0)
       setExpense(String(total))
@@ -50,6 +52,14 @@ export default function AnalyticsPage() {
       }
     })
   }, [router])
+
+  const filteredTx = filterByPeriod(transactions, period)
+  const catTotals = filteredTx.reduce<Record<string, number>>((acc, t) => {
+    const k = t.category || "Lainnya"
+    acc[k] = (acc[k] || 0) + Number(t.amount || 0)
+    return acc
+  }, {})
+  const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1])
 
   const handlePredict = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,13 +80,6 @@ export default function AnalyticsPage() {
     }
   }
 
-  const catTotals = transactions.reduce<Record<string, number>>((acc, t) => {
-    const k = t.category || "Lainnya"
-    acc[k] = (acc[k] || 0) + Number(t.amount || 0)
-    return acc
-  }, {})
-  const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1])
-
   const cleanLabel = pred?.result ? pred.result.replace(/[^\p{L}\p{N}\s-]/gu, "").trim() : ""
   const score = pred?.score ?? 0
   const advice =
@@ -85,7 +88,6 @@ export default function AnalyticsPage() {
       : score >= 40
       ? "Pengeluaran mulai mendekati batas aman, tetap pantau anggaran bulanan."
       : "Alokasi pemasukan, pengeluaran, dan tabungan berada di zona aman."
-
   const badgeStyle =
     score >= 75
       ? "bg-rose-50 text-rose-700 ring-rose-600/20"
@@ -94,7 +96,6 @@ export default function AnalyticsPage() {
       : "bg-teal-50 text-teal-800 ring-teal-600/20"
 
   const cardClass = "rounded-xl border border-slate-200 bg-white shadow-sm"
-  const focusRing = "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-600/25"
   const fieldClass =
     "h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm text-slate-900 transition focus:border-teal-600 focus:outline-none focus:ring-4 focus:ring-teal-600/15"
 
@@ -106,52 +107,57 @@ export default function AnalyticsPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-400 text-sm font-extrabold text-[#0B2540]">
               DT
             </div>
-            <span className="hidden text-base font-semibold tracking-tight text-white sm:inline">DoomTracker</span>
+            <span className="hidden text-base font-semibold text-white sm:inline">DoomTracker</span>
           </div>
-
-          <nav aria-label="Navigasi utama" className="flex items-center gap-1">
-            {NAV.map((item) => {
-              const active = item.href === "/analytics"
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-3.5 py-2 text-sm font-medium transition ${focusRing} ${
-                    active ? "bg-white/15 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              )
-            })}
+          <nav className="flex items-center gap-1">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-md px-3.5 py-2 text-sm font-medium transition ${
+                  item.href === "/analytics" ? "bg-white/15 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
-
-          <Link
-            href="/"
-            className={`hidden rounded-md border border-white/20 px-3.5 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 hover:text-white sm:inline-block ${focusRing}`}
-          >
+          <Link href="/" className="hidden rounded-md border border-white/20 px-3.5 py-2 text-sm font-medium text-slate-200 hover:bg-white/10 sm:inline-block">
             Kembali
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Analisis & prediksi AI</h1>
-          <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
-            Pantau proporsi pengeluaran per kategori dan evaluasi skor kesehatan finansial Anda.
-          </p>
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Analisis & prediksi AI</h1>
+            <p className="mt-1 text-sm text-slate-600">Pantau proporsi pengeluaran berdasarkan rentang waktu pilihan Anda.</p>
+          </div>
+
+          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  period === p.key ? "bg-[#0B2540] text-white" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <section className={`${cardClass} flex flex-col justify-between p-6`}>
             <div>
               <h2 className="text-base font-semibold text-slate-900">Proporsi pengeluaran</h2>
-              <p className="mt-1 text-sm text-slate-600">Arahkan kursor ke lingkaran untuk melihat detail kategori.</p>
+              <p className="mt-1 text-sm text-slate-600">Menampilkan {filteredTx.length} transaksi pada periode terpilih.</p>
             </div>
             {sortedCats.length === 0 ? (
-              <p className="py-16 text-center text-sm text-slate-500">Belum ada data transaksi.</p>
+              <p className="py-16 text-center text-sm text-slate-500">Belum ada transaksi pada periode ini.</p>
             ) : (
               <DonutChart categories={sortedCats} />
             )}
@@ -167,27 +173,23 @@ export default function AnalyticsPage() {
 
             <form onSubmit={handlePredict} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-800">Pemasukan / Target (Rp)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-800">Pemasukan / Target (Rp)</label>
                 <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} className={fieldClass} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-800">Total Pengeluaran (Rp)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-800">Total Pengeluaran (Rp)</label>
                 <input type="number" value={expense} onChange={(e) => setExpense(e.target.value)} className={fieldClass} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-800">Tabungan Saat Ini (Rp)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-800">Tabungan Saat Ini (Rp)</label>
                 <input type="number" value={savings} onChange={(e) => setSavings(e.target.value)} className={fieldClass} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-800">Cicilan / Hutang (Rp)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-800">Cicilan / Hutang (Rp)</label>
                 <input type="number" value={debt} onChange={(e) => setDebt(e.target.value)} className={fieldClass} />
               </div>
               <div className="pt-1 sm:col-span-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`h-11 w-full rounded-lg bg-[#0B2540] text-sm font-semibold text-white transition hover:bg-[#12365c] disabled:opacity-60 ${focusRing}`}
-                >
+                <button type="submit" disabled={loading} className="h-11 w-full rounded-lg bg-[#0B2540] text-sm font-semibold text-white transition hover:bg-[#12365c] disabled:opacity-60">
                   {loading ? "Menjalankan Model AI..." : "Jalankan Analisis Prediksi"}
                 </button>
               </div>
